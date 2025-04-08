@@ -5,7 +5,7 @@ from commands.help import handle_help
 from commands.chat import handle_chat
 from commands.distill import handle_distill
 from handlers.error_handler import handle_error
-from commands.other_commands import handle_mode, handle_check
+from commands.other_commands import handle_prompt
 
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackContext
 
@@ -13,8 +13,7 @@ def add_command_handlers(dispatcher):
     dispatcher.add_handler(CommandHandler("start", handle_start))
     dispatcher.add_handler(CommandHandler("help", handle_help))
     dispatcher.add_handler(CommandHandler("chat", handle_chat))
-    dispatcher.add_handler(CommandHandler("mode", handle_mode))
-    dispatcher.add_handler(CommandHandler("check", handle_check))
+    dispatcher.add_handler(CommandHandler("prompt", handle_prompt))
     dispatcher.add_handler(CommandHandler("distill", handle_distill))
 
     # Add the message handler to handle all non-command messages

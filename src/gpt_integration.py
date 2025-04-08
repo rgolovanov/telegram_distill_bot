@@ -22,7 +22,8 @@ class GPTIntegration:
         try:
             response = self.client.responses.create(
                 model=os.getenv("GPT_MODEL"),  # Replace with the desired GPT engine
-                input=f"The following conversation should be in '{mode}' mode. Use emoji as much as you can. Use Russian language in response. Message: {message}",
+                instructions=os.getenv("OPENAI_PROMPT"),
+                input=message
             )
             return response.output_text.strip()
         except Exception as e:
@@ -37,8 +38,9 @@ class GPTIntegration:
         try:
             response = self.client.responses.create(
                 model=os.getenv("GPT_MODEL"),  # Replace with the desired GPT engine
-                input=f"Summarize the following discussion and use emojies and simple formatted markdown text, split summary by logical sections. Use bold for user names. Use Russian language in response. {messages}",
+                instructions=os.getenv("OPENAI_PROMPT"),
+                input=f"Summarize the following discussion and use emojies and simple formatted text using only these HTML tags: <b>, <i>, <s>, <u>. Split summary by logical sections. {messages}"
             )
-            return response.output_text.strip()
+            return response.output_text
         except Exception as e:
             return f"Error summarizing discussion: {str(e)}"

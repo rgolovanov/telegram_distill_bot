@@ -14,5 +14,5 @@ def handle_distill(update, context):
     context.bot.send_message(
         chat_id=chat_id,
         text=distilled_summary,
-        parse_mode=ParseMode.MARKDOWN,  # Use Markdown formatting
+        parse_mode=ParseMode.HTML,  # Use HTML formatting
         )
