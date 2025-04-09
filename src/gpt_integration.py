@@ -1,16 +1,14 @@
-import openai
+from google import genai
 import os
 
 class GPTIntegration:
     def __init__(self, api_key=None):
         # Use the provided API key or fetch it from environment variables
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
             raise ValueError("API key for GPT model is not provided.")
 
-        self.client = openai.OpenAI(
-                api_key=os.environ.get("OPENAI_API_KEY"),
-            )
+        self.client = genai.Client(api_key=self.api_key)
 
     def send_message(self, message, mode="normal"):
         """
@@ -20,12 +18,9 @@ class GPTIntegration:
         :return: The GPT model's response.
         """
         try:
-            response = self.client.responses.create(
-                model=os.getenv("GPT_MODEL"),  # Replace with the desired GPT engine
-                instructions=os.getenv("OPENAI_PROMPT"),
-                input=message
-            )
-            return response.output_text.strip()
+            response = self.client.models.generate_content(
+                model="gemini-2.0-flash", contents=os.getenv("GPT_PROMPT") + message)
+            return response.text.strip()
         except Exception as e:
             return f"Error communicating with GPT model: {str(e)}"
 
@@ -36,11 +31,8 @@ class GPTIntegration:
         :return: A summary of the discussion.
         """
         try:
-            response = self.client.responses.create(
-                model=os.getenv("GPT_MODEL"),  # Replace with the desired GPT engine
-                instructions=os.getenv("OPENAI_PROMPT"),
-                input=f"Summarize the following discussion and use emojies and simple formatted text using only these HTML tags: <b>, <i>, <s>, <u>. Split summary by logical sections. {messages}"
-            )
-            return response.output_text
+            response = self.client.models.generate_content(
+                model="gemini-2.0-flash", contents="Сделай краткую выжимку, оставив только самое важное. " + os.getenv("GPT_PROMPT") + " ".join(messages))
+            return response.text.strip()
         except Exception as e:
             return f"Error summarizing discussion: {str(e)}"

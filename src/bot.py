@@ -1,12 +1,17 @@
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
-from utils.config import load_config
 from handlers.message_handler import add_command_handlers
 from handlers.error_handler import handle_error
 
+import dotenv
+import os
+
+dotenv.load_dotenv()
+
+print(dotenv.dotenv_values())
+
 def main():
-    config = load_config()
-    updater = Updater(token=config['TELEGRAM_BOT_TOKEN'], use_context=True)
+    updater = Updater(token=os.getenv('TELEGRAM_BOT_TOKEN'), use_context=True)
 
     dispatcher = updater.dispatcher
 
