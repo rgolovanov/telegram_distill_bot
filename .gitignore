@@ -1,3 +1,5 @@
 .venv
 .env
 **/__pycache__/
+message_histories/
+prompt_histories/

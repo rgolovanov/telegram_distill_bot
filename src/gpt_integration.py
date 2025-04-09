@@ -10,7 +10,7 @@ class GPTIntegration:
 
         self.client = genai.Client(api_key=self.api_key)
 
-    def send_message(self, message, mode="normal"):
+    def send_message(self, prompt, message):
         """
         Sends a message to the GPT model and returns the response.
         :param message: The input message to send to the GPT model.
@@ -19,12 +19,12 @@ class GPTIntegration:
         """
         try:
             response = self.client.models.generate_content(
-                model=os.getenv("GEMINI_MODEL"), contents=os.getenv("GPT_PROMPT") + message)
+                model=os.getenv("GEMINI_MODEL"), contents=prompt + message)
             return response.text.strip()
         except Exception as e:
             return f"Error communicating with GPT model: {str(e)}"
 
-    def distill_discussion(self, messages):
+    def distill_discussion(self, prompt, messages):
         """
         Summarizes a discussion based on a list of messages.
         :param messages: A list of messages from the discussion.
@@ -32,7 +32,7 @@ class GPTIntegration:
         """
         try:
             response = self.client.models.generate_content(
-                model="gemini-2.0-flash", contents="Сделай краткую выжимку, оставив только самое важное. " + os.getenv("GPT_PROMPT") + " ".join(messages))
+                model="gemini-2.0-flash", contents="Сделай краткую выжимку, оставив только самое важное. " + prompt + " ".join(messages))
             return response.text.strip()
         except Exception as e:
             return f"Error summarizing discussion: {str(e)}"
