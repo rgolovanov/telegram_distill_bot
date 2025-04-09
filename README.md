@@ -1,67 +1,82 @@
-# Telegram GPT Chatbot
+# Telegram Distill Bot
 
-This project is a Telegram chatbot that integrates with a GPT model to provide interactive conversations and various command functionalities.
+A Telegram chatbot that integrates with GPT models to provide interactive conversations, custom prompts, and message distillation.
 
 ## Features
 
-- **Interactive Chat**: Users can chat with the bot, which utilizes a GPT model to generate responses.
-- **Command Handlers**: The bot supports several commands:
-  - `/start`: Initializes the bot interaction and provides a welcome message.
-  - `/help`: Lists all available commands and their functionalities.
-  - `/chat`: Sends user messages to the GPT model and returns the generated response.
-  - Additional commands for setting modes and fact-checking messages.
+- **Interactive Chat**: Chat with the bot using GPT-based responses.
+- **Custom Prompts**: Set and save custom prompts for personalized interactions.
+- **Message Distillation**: Summarize the last 30 messages in a chat.
+- **Error Handling**: Graceful error handling with user notifications.
+- **Logging**: Logs are saved to `bot.log` in UTF-8 encoding and printed to the console.
+
+## Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd telegram_distill_bot
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Set up environment variables**:
+   Create a `.env` file in the root directory with the following content:
+   ```
+   TELEGRAM_BOT_TOKEN=<your-telegram-bot-token>
+   OPENAI_API_KEY=<your-openai-api-key>
+   GEMINI_API_KEY=<your-gemini-api-key>
+   GPT_PROMPT=<default-gpt-prompt>
+   GEMINI_MODEL=gemini-2.0-flash
+   ```
+
+4. **Run the bot**:
+   ```bash
+   python src/bot.py
+   ```
+
+## Commands
+
+- `/start`: Initialize the bot and receive a welcome message.
+- `/help`: Get a list of available commands and their descriptions.
+- `/chat <message>`: Send a message to the GPT model and receive a response.
+- `/prompt <new_prompt>`: Set or view the custom prompt for the chat.
+- `/distill`: Summarize the last 30 messages in the chat.
+
+## Logging
+
+- Logs are saved to `bot.log` with a maximum size of 5 MB and up to 3 backup files.
+- Log format: `YYMMDD HHMMSS.ms [LEVEL] Message`.
 
 ## Project Structure
 
 ```
-telegram-gpt-chatbot
+telekoteria_bot
 ├── src
-│   ├── bot.py                # Main entry point for the Telegram bot
-│   ├── gpt_integration.py    # Handles integration with the GPT model
-│   ├── commands              # Contains command handlers
-│   │   ├── start.py          # /start command handler
-│   │   ├── help.py           # /help command handler
-│   │   ├── chat.py           # /chat command handler
-│   │   └── other_commands.py  # Additional command handlers
-│   ├── utils                 # Utility functions and configurations
-│   │   ├── config.py         # Loads environment variables and configurations
-│   │   ├── logger.py         # Sets up logging for the application
-│   │   └── helpers.py        # Contains utility functions
-│   └── handlers              # Message and error handling
-│       ├── message_handler.py # Logic for handling incoming messages
-│       └── error_handler.py   # Error handling logic
-├── requirements.txt          # Lists project dependencies
-├── .env                      # Stores environment variables
-├── .gitignore                # Specifies files to ignore in version control
-└── README.md                 # Project documentation
+│   ├── bot.py                # Main entry point for the bot
+│   ├── storage.py            # Handles message and prompt storage
+│   ├── message_handler.py    # Handles Telegram message and command processing
+│   ├── gpt_integration.py    # Integrates with GPT models
+├── requirements.txt          # Python dependencies
+├── .env                      # Environment variables
+├── .gitignore                # Ignored files and directories
+├── README.md                 # Project documentation
+└── message_histories/        # Stores chat message histories
+    └── <chat_id>.json        # JSON files for each chat
+└── prompt_histories/         # Stores chat-specific prompts
+    └── <chat_id>.txt         # Text files for each chat
 ```
 
-## Setup Instructions
+## Requirements
 
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   cd telegram-gpt-chatbot
-   ```
-
-2. Install the required dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-
-3. Set up your environment variables in the `.env` file. Make sure to include your API keys for the GPT model.
-
-4. Run the bot:
-   ```
-   python src/bot.py
-   ```
-
-## Usage
-
-- Start a conversation with the bot by sending the `/start` command.
-- Use the `/help` command to see a list of available commands.
-- Engage in a chat using the `/chat` command followed by your message.
+- Python 3.7+
+- `python-telegram-bot`
+- `google-genai`
+- `python-dotenv`
 
 ## Contributing
 
-Contributions are welcome! Please submit a pull request or open an issue for any enhancements or bug fixes.
+Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
