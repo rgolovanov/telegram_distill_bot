@@ -19,7 +19,7 @@ class GPTIntegration:
         """
         try:
             response = self.client.models.generate_content(
-                model="gemini-2.0-flash", contents=os.getenv("GPT_PROMPT") + message)
+                model=os.getenv("GEMINI_MODEL"), contents=os.getenv("GPT_PROMPT") + message)
             return response.text.strip()
         except Exception as e:
             return f"Error communicating with GPT model: {str(e)}"

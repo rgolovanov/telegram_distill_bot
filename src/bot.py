@@ -1,7 +1,6 @@
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
-from handlers.message_handler import add_command_handlers
-from handlers.error_handler import handle_error
+from message_handler import add_command_handlers
 
 import dotenv
 import os
