@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import CallbackContext
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackContext
-import gpt_integration
+from gpt_integration import GPTIntegration
 from telegram import ParseMode  # Import ParseMode for formatting
 import os
 import dotenv
@@ -12,6 +12,15 @@ import random
 
 logger = logging.getLogger(__name__)
 
+def init_chat_data(context, chat_id):
+    """Initialize chat_data for a specific chat_id."""
+    if "messages" not in context.chat_data:
+        context.chat_data["messages"] = storage.load_message_history(chat_id) or []
+        storage.save_message_history(chat_id, context.chat_data["messages"])
+    if "prompt" not in context.chat_data:
+        context.chat_data["prompt"] = storage.load_chat_prompt(chat_id)
+        storage.save_chat_prompt(chat_id, context.chat_data["prompt"])
+
 def handle_error(update, context):
     """Log the error and notify the user."""
     logger.error(f'Update {update} caused error {context.error}')
@@ -20,10 +29,13 @@ def handle_error(update, context):
 def error_handling_decorator(func):
     """Decorator to handle errors in handler functions."""
     def wrapper(update, context):
-        text = update.message.text
-        user = update.message.from_user  # Get the user object
-        user_name = user.full_name if user.full_name else user.username  # Use full name or username
         chat_id = update.effective_chat.id
+        init_chat_data(context, chat_id)  # Initialize chat_data in one place
+
+        # Ensure update.message exists and has the text attribute
+        text = getattr(update.message, "text", None)
+        user = update.message.from_user if update.message else None  # Get the user object if available
+        user_name = user.full_name if user and user.full_name else (user.username if user else "Unknown")  # Use full name or username
         logging.info(f"{chat_id} | Received message from {user_name}: {text}")
 
         try:
@@ -42,7 +54,7 @@ def error_handling_decorator(func):
 def handle_prompt(update, context):
     chat_id = update.effective_chat.id
 
-    current_prompt = context.chat_data.get("prompt", storage.load_chat_prompt(chat_id))
+    current_prompt = context.chat_data.get("prompt")
 
     new_prompt = ' '.join(context.args)
     if not new_prompt:
@@ -65,8 +77,8 @@ def handle_distill(update, context):
         return
 
     logging.info(f"Distilling discussion for chat {chat_id} with messages: {messages}")
-    gpt = gpt_integration.GPTIntegration()
-    prompt = context.chat_data.get("prompt", storage.load_chat_prompt(chat_id))
+    gpt = GPTIntegration.get_cached_instance(chat_id)
+    prompt = context.chat_data.get("prompt")
     distilled_summary = gpt.distill_discussion(prompt=prompt, messages=messages)
     context.bot.send_message(
         chat_id=chat_id,
@@ -84,8 +96,8 @@ def handle_chat(update, context):
         return
 
     # Send the extracted message to the GPT model
-    prompt = context.chat_data.get("prompt", storage.load_chat_prompt(chat_id))
-    gpt_response = gpt_integration.GPTIntegration().send_message(prompt=prompt, message=user_message)
+    prompt = context.chat_data.get("prompt")
+    gpt_response = GPTIntegration.get_cached_instance(chat_id).send_message(prompt=prompt, message=user_message)
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=gpt_response,
@@ -134,36 +146,32 @@ def handle_message(update: Update, context: CallbackContext):
     user_name = user.full_name if user.full_name else user.username  # Use full name or username
     chat_id = update.effective_chat.id
 
-    # Load message history if not already loaded
-    if "messages" not in context.chat_data:
-        context.chat_data["messages"] = storage.load_message_history(chat_id)
-
     # Check if the message is a reply to the bot's message
     if update.message.reply_to_message and update.message.reply_to_message.from_user.id == context.bot.id:
         # Preserve the context by including the replied message
         replied_text = update.message.reply_to_message.text
         gpt_input = f"Context: {replied_text}\nUser: {text}"
         # Send the message to GPT
-        prompt = context.chat_data.get("prompt", storage.load_chat_prompt(chat_id))
-        gpt_response = gpt_integration.GPTIntegration().send_message(prompt=prompt, message=gpt_input)
+        prompt = context.chat_data.get("prompt")
+        gpt_response = GPTIntegration.get_cached_instance(chat_id).send_message(prompt=prompt, message=gpt_input)
         update.message.reply_text(gpt_response, parse_mode=ParseMode.HTML)
 
     # Check if the bot was mentioned by @username
     elif f"@{context.bot.username}" in text:
-        prompt = context.chat_data.get("prompt", storage.load_chat_prompt(chat_id))
-        gpt_response = gpt_integration.GPTIntegration().send_message(prompt=prompt, message=text)
+        prompt = context.chat_data.get("prompt")
+        gpt_response = GPTIntegration.get_cached_instance(chat_id).send_message(prompt=prompt, message=text)
         update.message.reply_text(gpt_response, parse_mode=ParseMode.HTML)
 
     # Check if the word "бот" is present in the message
     elif "бот" in text.lower():
         if random.random() < 0.9:  # 80% probability to reply
-            prompt = context.chat_data.get("prompt", storage.load_chat_prompt(chat_id))
-            gpt_response = gpt_integration.GPTIntegration().send_message(prompt=prompt, message=text)
+            prompt = context.chat_data.get("prompt")
+            gpt_response = GPTIntegration.get_cached_instance(chat_id).send_message(prompt=prompt, message=text)
             update.message.reply_text(gpt_response, parse_mode=ParseMode.HTML)
     # For plain messages, reply randomly with a lower probability
     elif random.random() < 0.3:
-        prompt = context.chat_data.get("prompt", storage.load_chat_prompt(chat_id))
-        gpt_response = gpt_integration.GPTIntegration().send_message(prompt=prompt, message=text)
+        prompt = context.chat_data.get("prompt")
+        gpt_response = GPTIntegration.get_cached_instance(chat_id).send_message(prompt=prompt, message=text)
         update.message.reply_text(gpt_response, parse_mode=ParseMode.HTML)
 
     # Store the message with the user's name in chat_data for distillation

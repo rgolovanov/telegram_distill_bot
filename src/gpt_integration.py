@@ -1,14 +1,24 @@
 from google import genai
 import os
+from functools import cache
+import logging
 
 class GPTIntegration:
-    def __init__(self, api_key=None):
+
+    @cache
+    def get_cached_instance(chat_id):
+        return GPTIntegration(chat_id)
+
+    def __init__(self, chat_id):
+        logging.warn(f"Initializing GPTIntegration for chat {chat_id}.")
         # Use the provided API key or fetch it from environment variables
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+        self.api_key = os.getenv("GEMINI_API_KEY")
         if not self.api_key:
             raise ValueError("API key for GPT model is not provided.")
 
+        self.chat_id = chat_id
         self.client = genai.Client(api_key=self.api_key)
+        self.chat = self.client.chats.create(model="gemini-2.0-flash")
 
     def send_message(self, prompt, message):
         """
@@ -18,8 +28,7 @@ class GPTIntegration:
         :return: The GPT model's response.
         """
         try:
-            response = self.client.models.generate_content(
-                model=os.getenv("GEMINI_MODEL"), contents=prompt + message)
+            response = self.chat.send_message(prompt + ". " + message)
             return response.text.strip()
         except Exception as e:
             return f"Error communicating with GPT model: {str(e)}"
