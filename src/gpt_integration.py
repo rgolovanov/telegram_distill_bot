@@ -19,6 +19,7 @@ class GPTIntegration:
         self.chat_id = chat_id
         self.client = genai.Client(api_key=self.api_key)
         self.chat = self.client.chats.create(model="gemini-2.0-flash")
+        self.prompt = ""
 
     def send_message(self, prompt, message):
         """
@@ -28,7 +29,12 @@ class GPTIntegration:
         :return: The GPT model's response.
         """
         try:
-            response = self.chat.send_message(prompt + ". " + message)
+            if self.prompt != prompt:
+                logging.info(f"Updating prompt for chat {self.chat_id}.")
+                self.prompt = prompt
+                message = f"{prompt}. {message}"
+
+            response = self.chat.send_message(message)
             return response.text.strip()
         except Exception as e:
             return f"Error communicating with GPT model: {str(e)}"
