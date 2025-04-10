@@ -8,6 +8,7 @@ import dotenv
 import logging
 import storage
 import traceback
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -142,15 +143,28 @@ def handle_message(update: Update, context: CallbackContext):
         # Preserve the context by including the replied message
         replied_text = update.message.reply_to_message.text
         gpt_input = f"Context: {replied_text}\nUser: {text}"
-
         # Send the message to GPT
         prompt = context.chat_data.get("prompt", storage.load_chat_prompt(chat_id))
         gpt_response = gpt_integration.GPTIntegration().send_message(prompt=prompt, message=gpt_input)
-        context.bot.send_message(
-            chat_id=chat_id,
-            text=gpt_response,
-            parse_mode=ParseMode.HTML
-        )
+        update.message.reply_text(gpt_response, parse_mode=ParseMode.HTML)
+
+    # Check if the bot was mentioned by @username
+    elif f"@{context.bot.username}" in text:
+        prompt = context.chat_data.get("prompt", storage.load_chat_prompt(chat_id))
+        gpt_response = gpt_integration.GPTIntegration().send_message(prompt=prompt, message=text)
+        update.message.reply_text(gpt_response, parse_mode=ParseMode.HTML)
+
+    # Check if the word "бот" is present in the message
+    elif "бот" in text.lower():
+        if random.random() < 0.9:  # 80% probability to reply
+            prompt = context.chat_data.get("prompt", storage.load_chat_prompt(chat_id))
+            gpt_response = gpt_integration.GPTIntegration().send_message(prompt=prompt, message=text)
+            update.message.reply_text(gpt_response, parse_mode=ParseMode.HTML)
+    # For plain messages, reply randomly with a lower probability
+    elif random.random() < 0.3:
+        prompt = context.chat_data.get("prompt", storage.load_chat_prompt(chat_id))
+        gpt_response = gpt_integration.GPTIntegration().send_message(prompt=prompt, message=text)
+        update.message.reply_text(gpt_response, parse_mode=ParseMode.HTML)
 
     # Store the message with the user's name in chat_data for distillation
     context.chat_data["messages"].append(f"{user_name}: {text}")
