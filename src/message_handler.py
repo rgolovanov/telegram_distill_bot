@@ -144,6 +144,9 @@ def handle_message(update: Update, context: CallbackContext):
     text = update.message.text
     user = update.message.from_user  # Get the user object
     user_name = user.full_name if user.full_name else user.username  # Use full name or username
+    user_first_name = user.first_name if user.first_name else user.username  # Use first name or default to "Unknown"
+    text = f"{user_first_name}: {text.strip()}"
+
     chat_id = update.effective_chat.id
 
     # Check if the message is a reply to the bot's message
@@ -175,7 +178,7 @@ def handle_message(update: Update, context: CallbackContext):
         update.message.reply_text(gpt_response, parse_mode=ParseMode.HTML)
 
     # Store the message with the user's name in chat_data for distillation
-    context.chat_data["messages"].append(f"{user_name}: {text}")
+    context.chat_data["messages"].append(f"{user_name}: {update.message.text.strip()}")
     # Limit stored messages to the last 30
     context.chat_data["messages"] = context.chat_data["messages"][-30:]
     # Save the updated message history to the file

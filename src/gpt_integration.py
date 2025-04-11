@@ -32,7 +32,7 @@ class GPTIntegration:
             if self.prompt != prompt:
                 logging.info(f"Updating prompt for chat {self.chat_id}.")
                 self.prompt = prompt
-                message = f"{prompt}. {message}"
+                message = f"{prompt}.\n{message}"
 
             response = self.chat.send_message(message)
             return response.text.strip()
